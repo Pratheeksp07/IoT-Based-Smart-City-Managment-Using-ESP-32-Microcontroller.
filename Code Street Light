@@ -1,0 +1,57 @@
+#include <Arduino.h>
+
+// LDR analog pin
+#define LDR_PIN 34
+
+// Street light output
+#define STREET_LIGHT 25
+
+// LDR threshold
+// Change this value according to your LDR readings
+#define LIGHT_THRESHOLD 1800
+
+void setup() {
+
+  Serial.begin(115200);
+
+  pinMode(LDR_PIN, INPUT);
+  pinMode(STREET_LIGHT, OUTPUT);
+
+  digitalWrite(STREET_LIGHT, LOW);
+
+  Serial.println("Automatic Street Light System");
+  Serial.println("-----------------------------");
+}
+
+void loop() {
+
+  int lightValue = analogRead(LDR_PIN);
+
+  Serial.print("LDR Value: ");
+  Serial.println(lightValue);
+
+  // Low light = Night
+  if (lightValue < LIGHT_THRESHOLD) {
+
+    digitalWrite(STREET_LIGHT, HIGH);
+
+    Serial.println("Condition: NIGHT");
+    Serial.println("Street Light: ON");
+    Serial.println("Energy Conservation: Automatic control");
+
+  }
+
+  // High light = Day
+  else {
+
+    digitalWrite(STREET_LIGHT, LOW);
+
+    Serial.println("Condition: DAY");
+    Serial.println("Street Light: OFF");
+    Serial.println("Energy Conservation: Active");
+  }
+
+  Serial.println("-----------------------------");
+
+  delay(1000);
+}
