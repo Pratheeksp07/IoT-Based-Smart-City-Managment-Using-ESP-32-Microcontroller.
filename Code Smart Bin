@@ -1,0 +1,236 @@
+#include <Arduino.h>
+#include <Keypad.h>
+#include <ESP32Servo.h>
+
+// =====================================================
+// PASSWORD / KEYPAD
+// =====================================================
+
+const byte ROWS = 4;
+const byte COLS = 4;
+
+char keys[ROWS][COLS] = {
+
+  {'1', '2', '3', 'A'},
+  {'4', '5', '6', 'B'},
+  {'7', '8', '9', 'C'},
+  {'*', '0', '#', 'D'}
+};
+
+byte rowPins[ROWS] = {13, 12, 14, 27};
+byte colPins[COLS] = {26, 25, 33, 32};
+
+Keypad keypad = Keypad(
+  makeKeymap(keys),
+  rowPins,
+  colPins,
+  ROWS,
+  COLS
+);
+
+// =====================================================
+// SERVO
+// =====================================================
+
+Servo dustbinServo;
+
+#define SERVO_PIN 15
+
+// =====================================================
+// WET WASTE SENSOR
+// =====================================================
+
+#define WET_SENSOR_PIN 4
+
+// =====================================================
+// BUZZER
+// =====================================================
+
+#define BUZZER_PIN 2
+
+// =====================================================
+// PASSWORD
+// =====================================================
+
+String correctPassword = "1234";
+
+String enteredPassword = "";
+
+// =====================================================
+// FINE
+// =====================================================
+
+int fineAmount = 100;
+
+// =====================================================
+// SETUP
+// =====================================================
+
+void setup() {
+
+  Serial.begin(115200);
+
+  pinMode(WET_SENSOR_PIN, INPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+
+  digitalWrite(BUZZER_PIN, LOW);
+
+  dustbinServo.attach(SERVO_PIN);
+
+  // Dustbin initially closed
+  dustbinServo.write(0);
+
+  Serial.println("================================");
+  Serial.println("       SMART DUSTBIN SYSTEM");
+  Serial.println("================================");
+
+  Serial.println("Enter password to open dustbin");
+}
+
+// =====================================================
+// BUZZER
+// =====================================================
+
+void beep() {
+
+  digitalWrite(BUZZER_PIN, HIGH);
+  delay(200);
+
+  digitalWrite(BUZZER_PIN, LOW);
+}
+
+// =====================================================
+// OPEN DUSTBIN
+// =====================================================
+
+void openDustbin() {
+
+  Serial.println("Password Correct!");
+  Serial.println("Opening Dustbin...");
+
+  beep();
+
+  dustbinServo.write(90);
+
+  delay(5000);
+
+  Serial.println("Checking waste...");
+
+  checkWaste();
+
+  Serial.println("Closing Dustbin...");
+
+  dustbinServo.write(0);
+
+  delay(1000);
+
+  Serial.println("Dustbin Closed");
+  Serial.println("-----------------------------");
+
+  enteredPassword = "";
+
+  Serial.println("Enter password to open dustbin");
+}
+
+// =====================================================
+// WRONG PASSWORD
+// =====================================================
+
+void wrongPassword() {
+
+  Serial.println("Incorrect Password!");
+  Serial.println("Access Denied.");
+
+  for (int i = 0; i < 3; i++) {
+
+    beep();
+    delay(100);
+  }
+
+  enteredPassword = "";
+
+  Serial.println("Try Again.");
+}
+
+// =====================================================
+// CHECK WASTE
+// =====================================================
+
+void checkWaste() {
+
+  int wetStatus = digitalRead(WET_SENSOR_PIN);
+
+  if (wetStatus == HIGH) {
+
+    Serial.println("Wet Waste Detected!");
+    Serial.println("Dry-Waste Section: INCORRECT");
+
+    Serial.print("Fine Generated: Rs. ");
+    Serial.println(fineAmount);
+
+    // Alert
+    for (int i = 0; i < 3; i++) {
+
+      beep();
+      delay(150);
+    }
+
+    Serial.println("Fine Record:");
+    Serial.println("Waste Type: Wet Waste");
+    Serial.println("Section: Dry Waste");
+    Serial.print("Fine: Rs. ");
+    Serial.println(fineAmount);
+
+  }
+
+  else {
+
+    Serial.println("Waste Status: Correct");
+    Serial.println("No Fine Generated.");
+  }
+}
+
+// =====================================================
+// MAIN LOOP
+// =====================================================
+
+void loop() {
+
+  char key = keypad.getKey();
+
+  if (key) {
+
+    Serial.print("*");
+
+    // # = Submit password
+    if (key == '#') {
+
+      Serial.println();
+
+      if (enteredPassword == correctPassword) {
+
+        openDustbin();
+
+      }
+      else {
+
+        wrongPassword();
+      }
+    }
+
+    // * = Clear password
+    else if (key == '*') {
+
+      enteredPassword = "";
+
+      Serial.println();
+      Serial.println("Password Cleared");
+    }
+
+    // Add number to password
+    else {
+
+      enteredPassword += key;
+    }
+  }
+}
