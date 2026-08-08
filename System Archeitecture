@@ -1,0 +1,27 @@
+                    ESP32
+                      |
+       +--------------+--------------+
+       |              |              |
+       v              v              v
+   SMART PARKING   STREET LIGHT   SMART DUSTBIN
+       |              |              |
+       v              v              v
+   Ultrasonic        LDR        Password Input
+    Sensors                       |
+       |                          v
+       v                     Servo Motor
+ Parking Status                   |
+       |                          v
+       |                    Waste Monitoring
+       |                          |
+       |                          v
+       |                    Correct / Wrong
+       |                          |
+       |                          v
+       |                     Fine Generation
+       |                          |
+       |                          v
+       |                    Excel Records
+       |
+       v
+Available / Occupied
